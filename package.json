@@ -1,0 +1,20 @@
+{
+  "name": "http-heartbeat",
+  "version": "1.0.0",
+  "description": "A simple container for sending a HTTP GET to a URL over an interval",
+  "main": "index.ts",
+  "scripts": {
+    "build": "esbuild index.ts --platform=node --bundle --minify --outfile=dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "author": "Zac Lovoy (@zwlovoy)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "20.12.12",
+    "esbuild": "0.21.4",
+    "typescript": "5.4.5"
+  },
+  "dependencies": {
+    "winston": "3.13.0"
+  }
+}
