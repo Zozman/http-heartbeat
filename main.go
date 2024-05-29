@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -70,7 +71,9 @@ func main() {
 				sugar.Warn("Error occured when sending GET to TEST_URL; skipping this cycle.")
 				sugar.Warnf("%v", err)
 			} else {
-				// Close the body or memory will leak
+				// Read and close the body or memory will leak
+				// https://stackoverflow.com/questions/69623172/go-http-package-why-do-i-need-to-close-res-body-after-reading-from-it
+				io.ReadAll(resp.Body)
 				resp.Body.Close()
 				sugar.Debugf("GET to TEST_URL %s returned status code of %d", testUrl, resp.StatusCode)
 
@@ -96,7 +99,9 @@ func sendHeartbeat(targetUrl string, sugar *zap.SugaredLogger) {
 		sugar.Warn("Error occured when sending GET to HEARTBEAT_URL; skipping this cycle.")
 		sugar.Warn(err)
 	} else {
-		// Close the body or memory will leak
+		// Read and close the body or memory will leak
+		// https://stackoverflow.com/questions/69623172/go-http-package-why-do-i-need-to-close-res-body-after-reading-from-it
+		io.ReadAll(resp.Body)
 		resp.Body.Close()
 		sugar.Debugf("GET to HEARTBEAT_URL %s returned status code of %d", targetUrl, resp.StatusCode)
 
