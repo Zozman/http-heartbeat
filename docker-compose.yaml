@@ -10,3 +10,17 @@ services:
       # - INTERVAL=5
       # Enable for verbose logs
       # - VERBOSE=true
+  go:
+    build:
+      dockerfile: go.Dockerfile
+    environment:
+      # URL to send the heartbeat to
+      - HEARTBEAT_URL=https://google.com
+      # Enable to test for 200 status from URL before sending Heartbeat
+      - TEST_URL=https://httpstat.us/200
+      # Use this URL to test for a non-200 status code
+      #- TEST_URL=https://httpstat.us/400
+      # Number of seconds between heartbeats; 30 seconds by default
+      # - INTERVAL=5
+      # Enable for verbose logs
+      # - VERBOSE=true
