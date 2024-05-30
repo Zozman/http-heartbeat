@@ -10,7 +10,7 @@
   "author": "Zac Lovoy (@zwlovoy)",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "20.12.12",
+    "@types/node": "20.12.13",
     "esbuild": "0.21.4",
     "typescript": "5.4.5"
   },
