@@ -4,7 +4,7 @@ A simple container to send a HTTP GET request to a specified url on an interval 
 
 ## Running Locally
 
-You can either run this as a containerized application using [Docker](https://www.docker.com/) or as a direct NodeJs app.  We recommend using the Docker method for ease of use if you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
+You can either run this as a containerized application using [Docker](https://www.docker.com/) or as a direct Go app.  We recommend using the Docker method for ease of use if you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
 
 ### Docker
 
@@ -12,11 +12,11 @@ You can either run this as a containerized application using [Docker](https://ww
 2. Set your environmental variables inside the [docker-compose.yaml](docker-compose.yaml) file
 3. Run `docker compose up --build`
 
-### NodeJs App
+### Go
 
-1. Run `npm install` to install dependencies
-2. Run `npm run build`
-3. Run `npm start` while passing settings as environmental variables
+1. Run `go mod download` to install dependencies
+2. Run `go build -o ./http_heartbeat`
+3. Run `./http_heartbeat` while passing settings as environmental variables
 
 ## Environmental Variables
 

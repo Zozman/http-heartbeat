@@ -18,10 +18,6 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - uses: actions/setup-node@v4.0.2
-        with:
-          node-version: "22"
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: "0"
@@ -34,10 +30,6 @@ jobs:
             DEFAULT_BUMP: patch
             INITIAL_VERSION: 1.0.0
             WITH_V: false
-
-      - name: Set Version In package.json
-        run: |
-            npm pkg set 'version'='${{ steps.tag.outputs.new_tag }}'
 
       - name: Generate Docker Meta
         id: meta
