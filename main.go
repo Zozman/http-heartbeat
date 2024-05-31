@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io"
+	//"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -61,7 +61,12 @@ func main() {
 	}
 
 	// Perform check along interval
-	for range time.Tick(time.Duration(intervalValue) * time.Second) {
+	ticker := time.NewTicker(time.Duration(intervalValue) * time.Second)
+	defer ticker.Stop()
+
+	sugar.Info("Heartbeat Service Started!")
+
+	for range ticker.C {
 		sugar.Debug("Starting heartbeat cycle...")
 		// If there is a TEST_URL, check it first before performing the heartbeat
 		if testUrlDefined {
@@ -70,10 +75,8 @@ func main() {
 			if err != nil {
 				sugar.Warn("Error occured when sending GET to TEST_URL; skipping this cycle.")
 				sugar.Warnf("%v", err)
+				continue
 			} else {
-				// Read and close the body or memory will leak
-				// https://stackoverflow.com/questions/69623172/go-http-package-why-do-i-need-to-close-res-body-after-reading-from-it
-				io.ReadAll(resp.Body)
 				resp.Body.Close()
 				sugar.Debugf("GET to TEST_URL %s returned status code of %d", testUrl, resp.StatusCode)
 
@@ -98,10 +101,8 @@ func sendHeartbeat(targetUrl string, sugar *zap.SugaredLogger) {
 	if err != nil {
 		sugar.Warn("Error occured when sending GET to HEARTBEAT_URL; skipping this cycle.")
 		sugar.Warn(err)
+		return
 	} else {
-		// Read and close the body or memory will leak
-		// https://stackoverflow.com/questions/69623172/go-http-package-why-do-i-need-to-close-res-body-after-reading-from-it
-		io.ReadAll(resp.Body)
 		resp.Body.Close()
 		sugar.Debugf("GET to HEARTBEAT_URL %s returned status code of %d", targetUrl, resp.StatusCode)
 
