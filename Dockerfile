@@ -1,5 +1,5 @@
 # Setup builder
-FROM golang:1.22.3-alpine AS builder
+FROM golang:1.23rc1-alpine AS builder
 WORKDIR /app
 COPY go.* ./
 RUN go mod download
