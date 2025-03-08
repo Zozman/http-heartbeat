@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -12,6 +11,95 @@ import (
 )
 
 func main() {
+	// Setup logger
+	logger := buildLogger()
+
+	// Check HEARTBEAT_URL
+	heartbeatUrl, heartbeatUrlDefined := os.LookupEnv("HEARTBEAT_URL")
+	logger.Debug("HEARTBEAT_URL Provided", zap.String("url", heartbeatUrl))
+
+	// Check INTERVAL
+	interval, intervalDefined := os.LookupEnv("INTERVAL")
+	var intervalValue int
+	var err error
+	if intervalDefined {
+		intervalValue, err = strconv.Atoi(interval)
+		if err != nil {
+			logger.Warn("Error reading INTERVAL value", zap.Error(err))
+			os.Exit(1)
+		}
+	} else {
+		intervalValue = 30
+	}
+	logger.Debug("INTERVAL Set", zap.Int("interval", intervalValue))
+
+	// Check TEST_URL
+	testUrl, testUrlDefined := os.LookupEnv("TEST_URL")
+	if testUrlDefined {
+		logger.Debug("TEST_URL Provided", zap.String("url", testUrl))
+	} else {
+		logger.Debug("No TEST_URL Provided")
+	}
+
+	// Fail if required environmental variable is missing
+	if !heartbeatUrlDefined {
+		logger.Warn("Missing HEARTBEAT_URL. Please provide a HEARTBEAT_URL as an environmental variable.")
+		os.Exit(1)
+	}
+
+	// Perform check along interval
+	ticker := time.NewTicker(time.Duration(intervalValue) * time.Second)
+	defer ticker.Stop()
+
+	logger.Info("Heartbeat Service Started!")
+
+	for range ticker.C {
+		logger.Debug("Starting heartbeat cycle...")
+		// If there is a TEST_URL, check it first before performing the heartbeat
+		if testUrlDefined {
+			logger.Debug("Checking status of TEST_URL", zap.String("url", testUrl))
+			resp, err := http.Get(testUrl)
+			if err != nil {
+				logger.Warn("Error occurred when sending GET to TEST_URL; skipping this cycle.", zap.Error(err))
+				continue
+			} else {
+				resp.Body.Close()
+				logger.Debug("GET to TEST_URL returned status code", zap.String("url", testUrl), zap.Int("status", resp.StatusCode))
+
+				if resp.StatusCode == http.StatusOK {
+					logger.Debug("TEST_URL returned OK status; proceeding with this cycle...")
+					sendHeartbeat(heartbeatUrl, logger)
+				} else {
+					logger.Debug("TEST_URL did not return OK status; skipping this cycle.")
+				}
+			}
+			// Else just perform the heartbeat
+		} else {
+			logger.Debug("No TEST_URL provided, proceeding with sending heartbeat")
+			sendHeartbeat(heartbeatUrl, logger)
+		}
+	}
+}
+
+func sendHeartbeat(targetUrl string, logger *zap.Logger) {
+	logger.Debug("Sending GET request to HEARTBEAT_URL", zap.String("url", targetUrl))
+	resp, err := http.Get(targetUrl)
+	if err != nil {
+		logger.Warn("Error occurred when sending GET to HEARTBEAT_URL; skipping this cycle.", zap.Error(err))
+		return
+	} else {
+		resp.Body.Close()
+		logger.Debug("GET to HEARTBEAT_URL returned status code", zap.String("url", targetUrl), zap.Int("status", resp.StatusCode))
+
+		if resp.StatusCode == http.StatusOK {
+			logger.Info("Heartbeat Sent!")
+		} else {
+			logger.Warn("Heartbeat URL did not return OK status", zap.Int("status", resp.StatusCode))
+		}
+	}
+}
+
+func buildLogger() *zap.Logger {
 	// Setup logger
 	prodConfig := zap.NewProductionConfig()
 	prodConfig.Encoding = "console"
@@ -24,92 +112,5 @@ func main() {
 	}
 	logger, _ := prodConfig.Build()
 	defer logger.Sync()
-	sugar := logger.Sugar()
-
-	// Check HEARTBEAT_URL
-	heartbeatUrl, heartbeatUrlDefined := os.LookupEnv("HEARTBEAT_URL")
-	sugar.Debugf("HEARTBEAT_URL Provided: %s", heartbeatUrl)
-
-	// Check INTERVAL
-	interval, intervalDefined := os.LookupEnv("INTERVAL")
-	var intervalValue int
-	var err error
-	if intervalDefined {
-		intervalValue, err = strconv.Atoi(interval)
-		if err != nil {
-			sugar.Warn("Error reading INTERVAL value")
-			sugar.Warn(err)
-			os.Exit(1)
-		}
-	} else {
-		intervalValue = 30
-	}
-	sugar.Debugf("INTERVAL Set: %d Seconds", intervalValue)
-
-	// Check TEST_URL
-	testUrl, testUrlDefined := os.LookupEnv("TEST_URL")
-	if testUrlDefined {
-		sugar.Debugf("TEST_URL Provided: %s", testUrl)
-	} else {
-		sugar.Debug("No TEST_URL Provided")
-	}
-
-	// Fail if required environmental variable is missing
-	if !heartbeatUrlDefined {
-		sugar.Warn("Missing HEARTBEAT_URL.  Please provide a HEARTBEAT_URL as an environmental variable.")
-		os.Exit(1)
-	}
-
-	// Perform check along interval
-	ticker := time.NewTicker(time.Duration(intervalValue) * time.Second)
-	defer ticker.Stop()
-
-	sugar.Info("Heartbeat Service Started!")
-
-	for range ticker.C {
-		sugar.Debug("Starting heartbeat cycle...")
-		// If there is a TEST_URL, check it first before performing the heartbeat
-		if testUrlDefined {
-			sugar.Debugf("Checking status of TEST_URL %s...", testUrl)
-			resp, err := http.Get(testUrl)
-			if err != nil {
-				sugar.Warn("Error occured when sending GET to TEST_URL; skipping this cycle.")
-				sugar.Warnf("%v", err)
-				continue
-			} else {
-				resp.Body.Close()
-				sugar.Debugf("GET to TEST_URL %s returned status code of %d", testUrl, resp.StatusCode)
-
-				if resp.StatusCode == http.StatusOK {
-					sugar.Debug("TEST_URL returned OK status; proceeding with this cycle...")
-					sendHeartbeat(heartbeatUrl, sugar)
-				} else {
-					sugar.Debug("TEST_URL did not return OK status; skipping this cycle.")
-				}
-			}
-			// Else just perform the heartbeat
-		} else {
-			sugar.Debug("No TEST_URL provided, proceeding with sending heartbeat")
-			sendHeartbeat(heartbeatUrl, sugar)
-		}
-	}
-}
-
-func sendHeartbeat(targetUrl string, sugar *zap.SugaredLogger) {
-	sugar.Debugf("Sending GET request to HEARTBEAT_URL %s...", targetUrl)
-	resp, err := http.Get(targetUrl)
-	if err != nil {
-		sugar.Warn("Error occured when sending GET to HEARTBEAT_URL; skipping this cycle.")
-		sugar.Warn(err)
-		return
-	} else {
-		resp.Body.Close()
-		sugar.Debugf("GET to HEARTBEAT_URL %s returned status code of %d", targetUrl, resp.StatusCode)
-
-		if resp.StatusCode == http.StatusOK {
-			sugar.Info("Heartbeat Sent!")
-		} else {
-			sugar.Warnf("Heartbear URL did not return OK status; status was %d", resp.StatusCode)
-		}
-	}
+	return logger
 }
