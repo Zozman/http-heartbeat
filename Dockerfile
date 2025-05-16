@@ -1,13 +1,14 @@
 # Setup base
 FROM golang:1.24.3 AS base
     WORKDIR /app
-    COPY go.* ./
+    COPY ./src/go.sum ./
+    COPY ./src/go.mod ./
     RUN go mod download
-    COPY *.go ./
+    COPY src/cmd ./cmd
 
 # Setup builder
 FROM base AS builder
-    RUN go build -o /http_heartbeat
+    RUN go build -o /http_heartbeat ./cmd/main.go
 
 # Run using hardened distroless image
 FROM cgr.dev/chainguard/glibc-dynamic AS runner
