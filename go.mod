@@ -1,6 +1,6 @@
 module httpheartbeat/m/v2
 
-go 1.24.5
+go 1.25.0
 
 require go.uber.org/zap v1.27.0
 

@@ -14,9 +14,9 @@ You can either run this as a containerized application using [Docker](https://ww
 
 ### Go
 
-1. Run `go mod download` in the `src` directory to install dependencies
-2. Run `go build -o ./http_heartbeat ./cmd/main.go` in the `src` directory to build the binary
-3. Run `./http_heartbeat` inm the `src` directory while passing settings as environmental variables
+1. Run `go mod download` to install dependencies
+2. Run `go build -o ./http_heartbeat ./src/cmd/main.go` to build the binary
+3. Run `./http_heartbeat` while passing settings as environmental variables
 
 ## Environmental Variables
 
